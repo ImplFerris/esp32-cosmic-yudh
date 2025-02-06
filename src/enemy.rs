@@ -10,7 +10,7 @@ use heapless::spsc::Queue;
 use crate::{game::DisplayType, sprites::RAW_PLANET_KILLER};
 
 const MAX_ENEMY_BULLETS: usize = 4;
-const BULLET_QUEUE_SIZE: usize = MAX_ENEMY_BULLETS + 1;
+pub const BULLET_QUEUE_SIZE: usize = MAX_ENEMY_BULLETS + 1;
 const INITIAL_BULLET_VELOCITY: i32 = -3;
 const INITIAL_ENEMY_VELOCITY: i32 = 2;
 
@@ -45,6 +45,11 @@ impl Enemy {
         }
     }
 
+    pub fn increase_level(&mut self) {
+        self.max_bullet = (self.max_bullet + 1).min(MAX_ENEMY_BULLETS);
+        self.velocity += if self.velocity < 0 { -1 } else { 1 };
+    }
+
     pub fn update(&mut self) {
         self.update_position();
         self.update_bullet();
@@ -76,10 +81,20 @@ impl Enemy {
             return;
         }
 
+        let bounding_box = self.img.bounding_box();
+
+        if let Some(last_bullet) = self.bullets.iter().last() {
+            // Check if the new bullet's position is too close to the last bullet's position
+            if (bounding_box.top_left.x - last_bullet.top_left.x).abs() < 5
+                && (bounding_box.top_left.y - last_bullet.top_left.y).abs() < 5
+            {
+                return;
+            }
+        }
+
         let rand_num = self.rng.random() % 5;
         let bullet_size = 5 + rand_num;
 
-        let bounding_box = self.img.bounding_box();
         let enemy_pos = self.img.bounding_box().top_left;
         let enemy_size = bounding_box.size;
 

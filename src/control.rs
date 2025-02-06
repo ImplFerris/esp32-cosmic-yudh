@@ -15,7 +15,13 @@ use crate::{
 
 const VRX_PIN: u8 = 13;
 const VRY_PIN: u8 = 14;
-const BTN_PIN: u8 = 32;
+
+const MAIN_BTN_PIN: u8 = 32;
+
+// #[cfg(feature = "buttons")]
+// const UP_BTN_PIN: u8 = 18;
+// #[cfg(feature = "buttons")]
+// const DOWN_BTN_PIN: u8 = 21;
 
 #[embassy_executor::task]
 pub async fn track_joystick(vrx: GpioPin<VRX_PIN>, _vry: GpioPin<VRY_PIN>, adc: ADC2) {
@@ -43,7 +49,7 @@ pub async fn track_joystick(vrx: GpioPin<VRX_PIN>, _vry: GpioPin<VRY_PIN>, adc: 
 }
 
 #[embassy_executor::task]
-pub async fn button_press(btn: GpioPin<BTN_PIN>) {
+pub async fn button_press(btn: GpioPin<MAIN_BTN_PIN>) {
     let input_btn = Input::new(btn, Pull::Up);
 
     loop {

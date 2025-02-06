@@ -1,7 +1,7 @@
 #![no_std]
 
+pub mod control;
 mod enemy;
 pub mod game;
-pub mod joystick;
 mod player;
 mod sprites;

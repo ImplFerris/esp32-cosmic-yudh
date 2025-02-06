@@ -26,7 +26,7 @@ const BULLET_SIZE: Size = Size::new(5, 2);
 const MAX_PLAYER_BULLETS: usize = 1;
 const BULLET_QUEUE_SIZE: usize = MAX_PLAYER_BULLETS + 1;
 const INITIAL_BULLET_SPEED: i32 = 3;
-const INITIAL_PLAYER_SPEED: i32 = 2;
+const INITIAL_PLAYER_SPEED: i32 = 3;
 
 pub struct Player {
     // Display Resolution
@@ -86,11 +86,12 @@ impl Player {
         let bounding_box = self.img.bounding_box();
 
         let y = bounding_box.top_left.y;
-        let max_bound = self.screen_height - bounding_box.size.height as i32;
+        let bound_pad = 5;
+        let max_bound = self.screen_height - bound_pad - bounding_box.size.height as i32;
 
         let new_y = match direction {
             PlayerDirection::Idle => y,
-            PlayerDirection::Up => (y - self.speed).max(0),
+            PlayerDirection::Up => (y - self.speed).max(bound_pad),
             PlayerDirection::Down => (y + self.speed).min(max_bound),
         };
 

@@ -1,7 +1,7 @@
 #![no_std]
 #![no_main]
 
-use cosmic_yudh::{game::Game, joystick};
+use cosmic_yudh::{control, game::Game};
 use embassy_executor::Spawner;
 use esp_backtrace as _;
 use esp_hal::{prelude::*, rng::Rng};
@@ -28,7 +28,7 @@ async fn main(spawner: Spawner) {
 
     // Track Joystick movements in background
     spawner
-        .spawn(joystick::track_joystick(
+        .spawn(control::track_joystick(
             peripherals.GPIO13,
             peripherals.GPIO14,
             peripherals.ADC2,
@@ -37,7 +37,7 @@ async fn main(spawner: Spawner) {
 
     // Track Joystick button state
     spawner
-        .spawn(joystick::button_press(peripherals.GPIO32))
+        .spawn(control::button_press(peripherals.GPIO32))
         .unwrap();
 
     // Initialize the OLED Display

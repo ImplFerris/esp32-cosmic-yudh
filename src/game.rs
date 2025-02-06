@@ -44,6 +44,7 @@ pub struct Game<'a> {
     enemy: Enemy,
     display: DisplayType<'a>,
     rng: Rng,
+    level: u32,
 }
 
 impl<'a> Game<'a> {
@@ -56,6 +57,7 @@ impl<'a> Game<'a> {
             enemy,
             display,
             rng,
+            level: 1,
         }
     }
 
@@ -63,7 +65,7 @@ impl<'a> Game<'a> {
         (Game::spawn_player(display), Game::init_enemy(display, rng))
     }
 
-    pub fn reset_game(&mut self) {
+    fn reset_game(&mut self) {
         self.score = 0;
         let (player, enemy) = Game::init_game_state(&self.display, self.rng);
         self.player = player;
@@ -94,15 +96,15 @@ impl<'a> Game<'a> {
                     }
                 }
                 GameState::Playing => {
+                    self.level_handle();
                     if BUTTON_PRESSED.swap(false, Ordering::Relaxed) {
                         self.player.shoot();
                     }
                     self.enemy.update();
                     self.player.update();
-
                     self.enemy_collison();
                     self.player_collison();
-
+                    self.bullets_collison();
                     self.draw_game();
 
                     self.display.flush().await.unwrap();
@@ -138,12 +140,20 @@ impl<'a> Game<'a> {
         }
     }
 
-    pub fn spawn_player(display: &DisplayType) -> Player {
+    fn level_handle(&mut self) {
+        let new_level = self.score / 10 + 1;
+        if new_level > self.level {
+            self.level = new_level;
+            self.enemy.increase_level();
+        }
+    }
+
+    fn spawn_player(display: &DisplayType) -> Player {
         let screen_dims = display.dimensions();
         Player::new(screen_dims.0 as i32, screen_dims.1 as i32)
     }
 
-    pub fn clear_display(&mut self) {
+    fn clear_display(&mut self) {
         self.display.clear_buffer();
         self.display.clear(BinaryColor::Off).unwrap();
     }
@@ -156,10 +166,10 @@ impl<'a> Game<'a> {
         self.draw_universe();
     }
 
-    pub fn draw_game_over(&mut self) {
+    fn draw_game_over(&mut self) {
         let mut score_text: String<32> = String::new();
 
-        Image::new(&sprites::RAW_GAME_OVER, Point::new(16, 32))
+        Image::new(&sprites::RAW_GAME_OVER, Point::new(16, 28))
             .draw(&mut self.display)
             .unwrap();
 
@@ -170,7 +180,6 @@ impl<'a> Game<'a> {
             .build();
 
         let text_width = score_text.len() as i32 * FONT_6X10.character_size.width as i32;
-        // let text_height = FONT_6X10.character_size.height as i32;
 
         // // Get display dimensions
         let (width, _) = self.display.dimensions();
@@ -184,7 +193,7 @@ impl<'a> Game<'a> {
             .unwrap();
     }
 
-    pub fn draw_welcome_screen(&mut self) {
+    fn draw_welcome_screen(&mut self) {
         Image::new(&sprites::RAW_BOW_ARROW, Point::new(16, 0))
             .draw(&mut self.display)
             .unwrap();
@@ -324,9 +333,38 @@ impl<'a> Game<'a> {
             BUTTON_PRESSED.store(false, Ordering::Relaxed);
         }
     }
+
+    fn bullets_collison(&mut self) {
+        let mut new_player_bullets = Queue::new();
+        let mut new_enemy_bullets = self.enemy.bullets.clone();
+
+        // Collect bullets that survived collision check
+        while let Some(player_bullet) = self.player.bullets.dequeue() {
+            let mut collided = false;
+
+            let mut tmp_enemy_bullets = Queue::new();
+            // Check for collisions with any enemy bullet
+            while let Some(enemy_bullet) = new_enemy_bullets.dequeue() {
+                if detect_collison(player_bullet.bounding_box(), enemy_bullet.bounding_box()) {
+                    collided = true;
+                } else {
+                    tmp_enemy_bullets.enqueue(enemy_bullet).unwrap();
+                }
+            }
+
+            new_enemy_bullets = tmp_enemy_bullets;
+
+            if !collided {
+                new_player_bullets.enqueue(player_bullet).unwrap();
+            }
+        }
+
+        self.player.bullets = new_player_bullets;
+        self.enemy.bullets = new_enemy_bullets;
+    }
 }
 
-pub fn detect_collison(a: Rectangle, b: Rectangle) -> bool {
+fn detect_collison(a: Rectangle, b: Rectangle) -> bool {
     let intersection = a.intersection(&b);
 
     if intersection.size.width == 0 || intersection.size.height == 0 {
