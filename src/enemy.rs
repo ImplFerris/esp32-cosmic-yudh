@@ -85,7 +85,7 @@ impl Enemy {
 
         let pos = Point::new(
             enemy_pos.x - enemy_size.width as i32,
-            enemy_pos.y - enemy_size.height as i32 / 2,
+            enemy_pos.y + enemy_size.height as i32 / 2,
         );
         let bullet = Circle::new(pos, bullet_size);
 
