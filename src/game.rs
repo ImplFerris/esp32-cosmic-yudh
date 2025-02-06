@@ -2,6 +2,7 @@ use core::fmt::Write;
 use core::sync::atomic::{AtomicBool, Ordering};
 use embassy_time::{Duration, Timer};
 use embedded_graphics::image::Image;
+use embedded_graphics::mono_font::ascii::FONT_9X18_BOLD;
 use embedded_graphics::primitives::{Circle, PrimitiveStyle};
 use embedded_graphics::{
     mono_font::{ascii::FONT_6X10, MonoTextStyleBuilder},
@@ -116,7 +117,7 @@ impl<'a> Game<'a> {
             self.clear_display();
 
             match self.state {
-                GameState::Menu => self.draw_title_text("Press to start..."),
+                GameState::Menu => self.draw_welcome_screen(),
                 GameState::Playing => self.draw_game(),
                 GameState::Dead => {
                     self.draw_game_over();
@@ -129,7 +130,7 @@ impl<'a> Game<'a> {
             if prev_state == GameState::Playing && self.state == GameState::Dead {
                 BUTTON_PRESSED.store(false, Ordering::Relaxed);
                 // Wait and show the game over screen
-                Timer::after(Duration::from_millis(1000)).await;
+                Timer::after(Duration::from_millis(500)).await;
                 BUTTON_PRESSED.store(false, Ordering::Relaxed);
             }
 
@@ -158,7 +159,7 @@ impl<'a> Game<'a> {
     pub fn draw_game_over(&mut self) {
         let mut score_text: String<32> = String::new();
 
-        Image::new(&super::sprites::RAW_GAME_OVER, Point::new(16, 32))
+        Image::new(&sprites::RAW_GAME_OVER, Point::new(16, 32))
             .draw(&mut self.display)
             .unwrap();
 
@@ -181,6 +182,31 @@ impl<'a> Game<'a> {
         Text::with_baseline(&score_text, Point::new(x, 42), text_style, Baseline::Top)
             .draw(&mut self.display)
             .unwrap();
+    }
+
+    pub fn draw_welcome_screen(&mut self) {
+        Image::new(&sprites::RAW_BOW_ARROW, Point::new(16, 0))
+            .draw(&mut self.display)
+            .unwrap();
+
+        let tile1 = "COSMIC";
+        let title2 = "YUDH";
+
+        let text_style = MonoTextStyleBuilder::new()
+            .font(&FONT_9X18_BOLD)
+            .text_color(BinaryColor::On)
+            .build();
+
+        let x = sprites::RAW_BOW_ARROW.size().width as i32 + 30;
+        Text::with_baseline(tile1, Point::new(x, 15), text_style, Baseline::Top)
+            .draw(&mut self.display)
+            .unwrap();
+
+        Text::with_baseline(title2, Point::new(x + 3, 35), text_style, Baseline::Top)
+            .draw(&mut self.display)
+            .unwrap();
+
+        self.draw_universe();
     }
 
     fn draw_universe(&mut self) {
@@ -255,26 +281,6 @@ impl<'a> Game<'a> {
             );
             image.draw(&mut self.display).unwrap();
         }
-    }
-
-    fn draw_title_text(&mut self, title: &str) {
-        let text_style = MonoTextStyleBuilder::new()
-            .font(&FONT_6X10)
-            .text_color(BinaryColor::On)
-            .build();
-
-        let text_width = title.len() as i32 * FONT_6X10.character_size.width as i32;
-        let text_height = FONT_6X10.character_size.height as i32;
-
-        let (width, height) = self.display.dimensions();
-
-        // Calculate top-left position to center the text
-        let x = (width as i32 - text_width) / 2;
-        let y = (height as i32 - text_height) / 2;
-
-        Text::with_baseline(title, Point::new(x, y), text_style, Baseline::Top)
-            .draw(&mut self.display)
-            .unwrap();
     }
 
     fn draw_enemy(&mut self) {
