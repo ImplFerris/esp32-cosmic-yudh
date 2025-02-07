@@ -1,6 +1,6 @@
 # Cosmic Yudh: a Shooting Game written in Rust for ESP32 with OLED Display
  
-A Shooting Game written in Rust for the ESP32 with an OLED display, using the Embassy framework.
+A space shooting game for the ESP32 with an OLED display. You control a spaceship, shoot enemies, and dodge attacks. Written in Rust using the Embassy framework. The game gets harder as you score more;levels increase, enemies move faster, and more bullets fired from enemy.
 
 ## Hardware Requirements
 - ESP32 (WROOM Dev Kit 1)
@@ -30,9 +30,8 @@ You can refer to the following tutorials in the "impl Rust on ESP32" book to lea
 
 - [Using Joystick Module with ESP32](https://esp32.implrust.com/joystick/index.html)
 - [Using OLED Display Module with ESP32](https://esp32.implrust.com/oled/index.html)
-
+- [Using Buzzer](https://esp32.implrust.com/buzzer/index.html)
 
 ## TODO
 
 - Optional feature to use buttons instead of joystick
-- Sound Effects
