@@ -18,6 +18,7 @@ use ssd1306::{
     mode::BufferedGraphicsModeAsync, prelude::I2CInterface, size::DisplaySize128x64, Ssd1306Async,
 };
 
+use crate::audio::{music, AudioEffect};
 use crate::sprites::{self};
 use crate::{enemy::Enemy, player::Player};
 
@@ -28,6 +29,8 @@ pub type DisplayType<'a> = Ssd1306Async<
 >;
 
 pub static BUTTON_PRESSED: AtomicBool = AtomicBool::new(false);
+
+const LEVEL_INTERVAL: u32 = 50;
 
 #[derive(PartialEq, Clone, Copy)]
 pub enum GameState {
@@ -45,12 +48,14 @@ pub struct Game<'a> {
     display: DisplayType<'a>,
     rng: Rng,
     level: u32,
+    audio: AudioEffect<'a>,
 }
 
 impl<'a> Game<'a> {
-    pub fn new(display: DisplayType<'a>, rng: Rng) -> Self {
+    pub fn new(display: DisplayType<'a>, rng: Rng, audio: AudioEffect<'a>) -> Self {
         let (player, enemy) = Game::init_game_state(&display, rng);
         Self {
+            audio,
             state: GameState::Menu,
             score: 0,
             player,
@@ -97,8 +102,8 @@ impl<'a> Game<'a> {
                 }
                 GameState::Playing => {
                     self.level_handle();
-                    if BUTTON_PRESSED.swap(false, Ordering::Relaxed) {
-                        self.player.shoot();
+                    if BUTTON_PRESSED.swap(false, Ordering::Relaxed) && self.player.shoot() {
+                        self.audio.play_tone(music::NOTE_D6, 20);
                     }
                     self.enemy.update();
                     self.player.update();
@@ -141,7 +146,7 @@ impl<'a> Game<'a> {
     }
 
     fn level_handle(&mut self) {
-        let new_level = self.score / 10 + 1;
+        let new_level = self.score / LEVEL_INTERVAL + 1;
         if new_level > self.level {
             self.level = new_level;
             self.enemy.increase_level();
@@ -304,6 +309,7 @@ impl<'a> Game<'a> {
         while let Some(bullet) = self.player.bullets.dequeue() {
             if detect_collison(bullet, enemy_bb) {
                 self.score += 1;
+                self.audio.play_tone(music::NOTE_B4, 20);
             } else {
                 new_queue.enqueue(bullet).unwrap();
             }
@@ -320,6 +326,7 @@ impl<'a> Game<'a> {
         while let Some(bullet) = self.enemy.bullets.dequeue() {
             if detect_collison(bullet.bounding_box(), player_bb) {
                 self.player.lives = self.player.lives.saturating_sub(1);
+                self.audio.play_tone(music::NOTE_FS2, 20);
             } else {
                 new_queue.enqueue(bullet).unwrap();
             }
@@ -347,6 +354,7 @@ impl<'a> Game<'a> {
             while let Some(enemy_bullet) = new_enemy_bullets.dequeue() {
                 if detect_collison(player_bullet.bounding_box(), enemy_bullet.bounding_box()) {
                     collided = true;
+                    self.audio.play_tone(music::NOTE_AS6, 20);
                 } else {
                     tmp_enemy_bullets.enqueue(enemy_bullet).unwrap();
                 }

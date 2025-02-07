@@ -12,7 +12,7 @@ use crate::{game::DisplayType, sprites::RAW_PLANET_KILLER};
 const MAX_ENEMY_BULLETS: usize = 4;
 pub const BULLET_QUEUE_SIZE: usize = MAX_ENEMY_BULLETS + 1;
 const INITIAL_BULLET_VELOCITY: i32 = -3;
-const INITIAL_ENEMY_VELOCITY: i32 = 2;
+const INITIAL_ENEMY_VELOCITY: i32 = 1;
 
 pub struct Enemy {
     pub img: Image<'static, super::sprites::ImgRawType>,

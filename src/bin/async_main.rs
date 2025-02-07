@@ -1,10 +1,10 @@
 #![no_std]
 #![no_main]
 
-use cosmic_yudh::{control, game::Game};
+use cosmic_yudh::{audio::AudioEffect, control, game::Game};
 use embassy_executor::Spawner;
 use esp_backtrace as _;
-use esp_hal::{prelude::*, rng::Rng};
+use esp_hal::{ledc::Ledc, prelude::*, rng::Rng};
 use log::info;
 use ssd1306::{
     mode::DisplayConfigAsync, prelude::DisplayRotation, size::DisplaySize128x64,
@@ -57,9 +57,12 @@ async fn main(spawner: Spawner) {
         .into_buffered_graphics_mode();
     display.init().await.unwrap();
 
-    let rng = Rng::new(peripherals.RNG);
+    // sound effects module
+    let ledc = Ledc::new(peripherals.LEDC);
+    let audio = AudioEffect::new(ledc, peripherals.GPIO33);
 
+    let rng = Rng::new(peripherals.RNG);
     // Initialize the Game
-    let mut game = Game::new(display, rng);
+    let mut game = Game::new(display, rng, audio);
     game.start().await;
 }

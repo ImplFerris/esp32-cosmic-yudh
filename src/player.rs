@@ -117,9 +117,9 @@ impl Player {
         self.bullets = new_queue;
     }
 
-    pub fn shoot(&mut self) {
+    pub fn shoot(&mut self) -> bool {
         if self.bullets.is_full() {
-            return;
+            return false;
         }
 
         let bounding_box = self.img.bounding_box();
@@ -133,5 +133,7 @@ impl Player {
         let bullet = Rectangle::new(pos, BULLET_SIZE);
 
         self.bullets.enqueue(bullet).unwrap();
+
+        true
     }
 }
