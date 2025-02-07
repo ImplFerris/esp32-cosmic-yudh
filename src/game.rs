@@ -167,6 +167,7 @@ impl<'a> Game<'a> {
         self.player.draw(&mut self.display);
         self.draw_enemy();
         self.print_score();
+        self.print_level();
         self.print_lives();
         self.draw_universe();
     }
@@ -282,11 +283,27 @@ impl<'a> Game<'a> {
             .unwrap();
     }
 
+    fn print_level(&mut self) {
+        let mut score_text: String<16> = String::new();
+        write!(score_text, "L: {}", self.level).unwrap();
+
+        let text_style = MonoTextStyleBuilder::new()
+            .font(&FONT_6X10)
+            .text_color(BinaryColor::On)
+            .build();
+
+        let x = 60;
+        let y = 0;
+
+        Text::with_baseline(&score_text, Point::new(x, y), text_style, Baseline::Top)
+            .draw(&mut self.display)
+            .unwrap();
+    }
+
     fn print_lives(&mut self) {
         let img_width: i32 = sprites::RAW_HEART.bounding_box().size.width as i32;
 
-        let width = self.display.dimensions().0;
-        let x = (width as i32 / 2 - img_width * self.player.lives as i32) + img_width;
+        let x = 28;
 
         for i in 0..self.player.lives {
             let image = Image::new(
