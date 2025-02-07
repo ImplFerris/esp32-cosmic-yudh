@@ -35,3 +35,8 @@ You can refer to the following tutorials in the "impl Rust on ESP32" book to lea
 ## TODO
 
 - Optional feature to use buttons instead of joystick
+
+## Preview
+
+https://github.com/user-attachments/assets/6613e051-f519-46a0-83c0-bf4428d5ef1c
+
