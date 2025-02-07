@@ -23,7 +23,7 @@ pub static PLAYER_DIRECTION: AtomicPlayerDirection =
     AtomicPlayerDirection::new(PlayerDirection::Idle);
 const PLAYER_LIVES: u8 = 3;
 const BULLET_SIZE: Size = Size::new(5, 2);
-const MAX_PLAYER_BULLETS: usize = 1;
+const MAX_PLAYER_BULLETS: usize = 4;
 const BULLET_QUEUE_SIZE: usize = MAX_PLAYER_BULLETS + 1;
 const INITIAL_BULLET_SPEED: i32 = 3;
 const INITIAL_PLAYER_SPEED: i32 = 3;
@@ -39,6 +39,7 @@ pub struct Player {
     // Bullets Data
     pub bullets: Queue<Rectangle, BULLET_QUEUE_SIZE>,
     bullet_speed: i32,
+    max_bullet: usize,
 }
 
 impl Player {
@@ -58,7 +59,12 @@ impl Player {
             speed: INITIAL_PLAYER_SPEED,
             bullets: Queue::new(),
             bullet_speed: INITIAL_BULLET_SPEED,
+            max_bullet: 1,
         }
+    }
+
+    pub fn increase_level(&mut self) {
+        self.max_bullet = (self.max_bullet + 1).min(MAX_PLAYER_BULLETS);
     }
 
     pub fn draw(&self, display: &mut DisplayType) {
@@ -118,7 +124,7 @@ impl Player {
     }
 
     pub fn shoot(&mut self) -> bool {
-        if self.bullets.is_full() {
+        if self.bullets.is_full() || self.bullets.len() >= self.max_bullet {
             return false;
         }
 

@@ -72,6 +72,7 @@ impl<'a> Game<'a> {
 
     fn reset_game(&mut self) {
         self.score = 0;
+        self.level = 1;
         let (player, enemy) = Game::init_game_state(&self.display, self.rng);
         self.player = player;
         self.enemy = enemy;
@@ -149,6 +150,7 @@ impl<'a> Game<'a> {
         let new_level = self.score / LEVEL_INTERVAL + 1;
         if new_level > self.level {
             self.level = new_level;
+            self.player.increase_level();
             self.enemy.increase_level();
         }
     }

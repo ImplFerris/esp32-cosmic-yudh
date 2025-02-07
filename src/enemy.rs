@@ -24,6 +24,7 @@ pub struct Enemy {
     bullet_velocity: i32,
     // Current max bullet
     max_bullet: usize,
+    shoot_pending: bool,
 }
 
 impl Enemy {
@@ -42,6 +43,7 @@ impl Enemy {
             bullets: Queue::new(),
             bullet_velocity: INITIAL_BULLET_VELOCITY,
             max_bullet: 1,
+            shoot_pending: false,
         }
     }
 
@@ -53,8 +55,7 @@ impl Enemy {
     pub fn update(&mut self) {
         self.update_position();
         self.update_bullet();
-        let rand_num = self.rng.random();
-        if rand_num % 2 == 0 {
+        if self.shoot_pending || self.rng.random() % 2 == 0 {
             self.shoot();
         }
     }
@@ -85,9 +86,10 @@ impl Enemy {
 
         if let Some(last_bullet) = self.bullets.iter().last() {
             // Check if the new bullet's position is too close to the last bullet's position
-            if (bounding_box.top_left.x - last_bullet.top_left.x).abs() < 5
-                && (bounding_box.top_left.y - last_bullet.top_left.y).abs() < 5
+            if (bounding_box.top_left.x - last_bullet.top_left.x).abs() < 10
+                || (bounding_box.top_left.y - last_bullet.top_left.y).abs() < 20
             {
+                self.shoot_pending = true;
                 return;
             }
         }
